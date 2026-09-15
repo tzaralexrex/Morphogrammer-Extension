@@ -1,0 +1,195 @@
+﻿:root {
+  --bg: #f7f7fb;
+  --fg: #222;
+  --accent: #2563eb;
+  --border: #cfd4e2;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding: 1rem;
+  min-width: 420px;
+}
+
+h1 {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+p.desc {
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+  opacity: 0.8;
+}
+
+/* Предпросмотр */
+.preview-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.preview-section h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.preview-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.preview-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-col label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  opacity: 0.8;
+}
+
+.preview-col textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+#preview-source, #user-source {
+  min-height: 4rem;
+}
+
+#preview-result, #user-result {
+  min-height: 4rem;
+  background: #f9fafb;
+}
+
+/* Чекбоксы */
+#checkboxes {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+#checkboxes label {
+  margin-right: 1rem;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+#checkboxes input[type="checkbox"] {
+  margin-right: 0.25rem;
+}
+
+/* Таблица */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+th {
+  background: #eef1f8;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.9rem;
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+select.map-select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.9rem;
+}
+
+.controls {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+.hint {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-top: 0.5rem;
+  max-width: 900px;
+  line-height: 1.5;
+}
+
+.hint h3 {
+  font-size: 0.9rem;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.hint ul {
+  margin: 0.25rem 0 0.5rem 1.5rem;
+  padding: 0;
+}
+
+.hint li {
+  margin: 0.15rem 0;
+}
+
+/* Кнопка выбора Unicode */
+.unicode-picker {
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  min-width: 40px;
+}

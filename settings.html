@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Morphogrammer — Настройки</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <h1>Morphogrammer — Таблица соответствий</h1>
+  <p class="desc">
+    Настройте замены для каждой кириллической буквы по пяти направлениям: латиница, греческий, иврит, цифры, Unicode.<br>
+    Чекбоксы ниже определяют, какие столбцы используются при преобразовании. Приоритет замены растёт слева направо.
+  </p>
+
+  <!-- Чекбоксы приоритетов -->
+  <div id="checkboxes">
+    <!-- Отрисовывается через renderCheckboxes() -->
+  </div>
+
+  <!-- Предпросмотр -->
+  <div class="preview-section">
+    <h2>Пример</h2>
+    <div class="preview-row">
+      <div class="preview-col">
+        <label for="preview-source">Исходный текст:</label>
+        <textarea id="preview-source" autocomplete="off">В чащах юга жил бы цитрус? Да, но фальшивый экземпляръ!</textarea>
+      </div>
+      <div class="preview-col">
+        <label for="preview-result">Результат:</label>
+        <textarea id="preview-result" readonly autocomplete="off"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Таблица соответствий -->
+  <h2>Таблица соответствий</h2>
+  <p class="desc">
+    Выберите кириллическую букву в первом столбце — остальные столбцы покажут текущие соответствия.<br>
+    Измените любой столбец — соответствие обновится для выбранной буквы.
+  </p>
+
+  <table id="mapTable">
+    <thead>
+      <tr>
+        <th style="width:10%; text-align: center;">Кириллица</th>
+        <th style="width:15%; text-align: center;">Латиница</th>
+        <th style="width:15%; text-align: center;">Греческий</th>
+        <th style="width:15%; text-align: center;">Иврит</th>
+        <th style="width:10%; text-align: center;">Цифры</th>
+        <th style="width:15%; text-align: center;">Unicode</th>
+        <th style="width:5%; text-align: center;">Сброс</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Отрисовывается через renderTable() -->
+    </tbody>
+  </table>
+
+  <div class="controls">
+    <button id="resetDefault" class="secondary">Сбросить к дефолту</button>
+    <button id="export" class="secondary">Экспорт JSON</button>
+    <button id="importBtn" class="secondary">Импорт JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+
+  <!-- Инструкция -->
+  <div class="hint">
+    <h3>Инструкция</h3>
+    <ul>
+      <li>В столбце «Кириллица» найдите букву для настройки.</li>
+      <li>В остальных столбцах укажите соответствующие символы.</li>
+      <li>Оставьте поле пустым (-), если замена не нужна.</li>
+      <li>Можно вводить несколько символов (например, «ы» → «bl»).</li>
+      <li>Эмодзи и специальные символы разрешены, но могут некорректно отображаться в некоторых редакторах.</li>
+      <li>Чекбоксы выше определяют приоритет: Unicode → Цифры → Иврит → Греческий → Латиница.</li>
+      <li>Любые изменения сохраняются сразу автоматически.</li>
+      <li>«Экспорт JSON» — сохраните текущие настройки в файл для бэкапа или переноса.</li>
+      <li>«Импорт JSON» — загрузите настройки из файла (например, из бэкапа или пресета).</li>
+    </ul>
+  </div>
+
+  <!-- Горячие клавиши -->
+  <div class="hint" style="margin-top: 1rem;">
+    <h3>Горячие клавиши</h3>
+    <p>
+      Для быстрого преобразования выделенного текста используйте комбинацию
+      <kbd id="hotkeyValue" style="
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 3px;
+        padding: 0.1rem 0.3rem;
+        font-family: monospace;
+      ">Alt+Shift+M</kbd>.
+    </p>
+    <p>
+      Чтобы изменить горячую клавишу:
+    </p>
+    <ol>
+      <li>Откройте <code>chrome://extensions/shortcuts</code>.</li>
+      <li>Найдите Morphogrammer в списке.</li>
+      <li>Кликните на поле с комбинацией и нажмите новую.</li>
+    </ol>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

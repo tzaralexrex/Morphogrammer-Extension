@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Morphogrammer</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --fg: #222;
+      --accent: #2563eb;
+      --border: #cfd4e2;
+      --disabled: #9ca3af;
+    }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 1rem;
+      min-width: 280px;
+      max-width: 320px;
+    }
+    h1 {
+      font-size: 1.1rem;
+      margin: 0 0 0.75rem;
+    }
+
+    /* Чекбоксы */
+    #checkboxes {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    #checkboxes label {
+      display: block;
+      margin: 0.35rem 0;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    #checkboxes input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+
+    /* Кнопка преобразования */
+    #transformBtn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+    }
+    #transformBtn:disabled {
+      background: var(--disabled);
+      cursor: not-allowed;
+    }
+    #transformBtn:not(:disabled):hover {
+      opacity: 0.9;
+    }
+
+    /* Ссылка на настройки */
+    #settingsLink {
+      display: block;
+      text-align: center;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+    }
+    #settingsLink:hover {
+      background: #f3f4f6;
+    }
+
+    /* Подсказка */
+    #hint {
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 0.5rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Morphogrammer</h1>
+
+  <!-- Чекбоксы приоритетов -->
+  <div id="checkboxes">
+    <!-- Отрисовывается через renderCheckboxes() -->
+  </div>
+
+  <!-- Кнопка преобразования -->
+  <button id="transformBtn" disabled>Преобразовать</button>
+  <div id="hint">Выделите текст в поле ввода для преобразования</div>
+
+  <!-- Ссылка на настройки -->
+  <a id="settingsLink" href="settings.html" target="_blank">Настройки таблиц</a>
+
+  <!-- Подсказка про горячую клавишу -->
+  <div id="hotkeyHint" style="
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: center;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  ">
+    Горячая клавиша: <kbd id="hotkeyValue" style="
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 3px;
+      padding: 0.1rem 0.3rem;
+      font-family: monospace;
+    ">Alt+Shift+M</kbd>
+    <br>
+    <span style="opacity: 0.7;">Изменить: chrome://extensions/shortcuts</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

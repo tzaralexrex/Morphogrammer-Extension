@@ -1,0 +1,40 @@
+﻿{
+  "manifest_version": 3,
+  "name": "Morphogrammer",
+  "version": "2.0.0",
+  "description": "Заменяет выделенный текст по пользовательской таблице замен с приоритетом столбцов (латиница, греческий, иврит, цифры, Unicode).",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "commands"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_title": "Morphogrammer — настройки",
+    "default_popup": "popup.html"
+  },
+  "options_page": "settings.html",
+  "commands": {
+    "transform-selection": {
+      "suggested_key": {
+        "default": "Alt+Shift+M",
+        "mac": "Alt+Shift+M"
+      },
+      "description": "Преобразовать выделенный текст"
+    }
+  },
+  "icons": {
+    "48": "icons/icon48.png"
+  }
+}
