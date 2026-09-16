@@ -4,7 +4,7 @@ let transformMap = {};
 let lastEditable = null;
 let lastRange = null;
 
-// <-- НОВОЕ: обработка иврита (LRM)
+// обработка иврита (LRM)
 function isHebrewChar(ch) {
   if (!ch) return false;
   const code = ch.codePointAt(0);
@@ -41,7 +41,7 @@ function addLrmToHebrewRuns(text) {
   return result;
 }
 
-// <-- НОВОЕ: преобразование текста с использованием transformMap
+// преобразование текста с использованием transformMap
 function transformText(text) {
   let out = "";
   for (let i = 0; i < text.length; i++) {
@@ -58,7 +58,7 @@ function transformText(text) {
   return out;
 }
 
-// <-- НОВОЕ: обработчик checkSelection
+// обработчик checkSelection
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkSelection") {
     const selection = window.getSelection();
@@ -72,11 +72,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  // <-- НОВОЕ: получаем transformMap из сообщения
+  // получаем transformMap из сообщения
   if (message.transformMap) {
     transformMap = message.transformMap;
-    // <-- ДОБАВИТЬ ЛОГ ЗДЕСЬ
-    console.log("Morphogrammer: получил transformMap", transformMap);
   }
 
   try {
@@ -104,7 +102,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       result = replaceInContentEditable(editable);
     }
 
-    console.log("Morphogrammer: результат:", result);
     sendResponse(result);
   } catch (error) {
     const result = {

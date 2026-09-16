@@ -1,6 +1,6 @@
 ﻿const MENU_ID = "morphogrammer-transform";
 
-// <-- НОВОЕ: referenceMap по умолчанию (из оригинального кода + unicode)
+// referenceMap по умолчанию (из оригинального кода + unicode)
 const defaultReferenceMap = (function() {
   const m = Object.create(null);
   const set = (cyr, lat, gr, he, digit) => {
@@ -80,7 +80,7 @@ const defaultReferenceMap = (function() {
   return m;
 })();
 
-// <-- НОВОЕ: чекбоксы по умолчанию
+// чекбоксы по умолчанию
 const defaultCheckboxes = {
   lat: true,
   gr: false,
@@ -89,14 +89,14 @@ const defaultCheckboxes = {
   unicode: false
 };
 
-// <-- НОВОЕ: полный список кириллических символов
+// полный список кириллических символов
 const alphabetCyr = [
   "",
   "А","Б","В","Г","Д","Е","Ё","Ж","З","И","Й","К","Л","М","Н","О","П","Р","С","Т","У","Ф","Х","Ц","Ч","Ш","Щ","Ъ","Ы","Ь","Э","Ю","Я",
   "а","б","в","г","д","е","ё","ж","з","и","й","к","л","м","н","о","п","р","с","т","у","ф","х","ц","ч","ш","щ","ъ","ы","ь","э","ю","я"
 ];
 
-// <-- НОВОЕ: построение transformMap из referenceMap и checkboxes
+// построение transformMap из referenceMap и checkboxes
 function rebuildTransformMap(referenceMap, checkboxes) {
   const transformMap = Object.create(null);
 
@@ -133,7 +133,7 @@ chrome.runtime.onInstalled.addListener(() => {
     });
   });
 
-  // <-- НОВОЕ: инициализируем referenceMap и checkboxes, если их нет
+  // инициализируем referenceMap и checkboxes, если их нет
   chrome.storage.sync.get(["referenceMap", "checkboxes"], (result) => {
     if (!result.referenceMap) {
       chrome.storage.sync.set({ referenceMap: defaultReferenceMap });
@@ -150,19 +150,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   try {
-    // <-- НОВОЕ: загружаем referenceMap и checkboxes из storage
     const storageData = await new Promise((resolve) => {
       chrome.storage.sync.get(["referenceMap", "checkboxes"], resolve);
     });
 
     const referenceMap = storageData.referenceMap || defaultReferenceMap;
     const checkboxes = storageData.checkboxes || defaultCheckboxes;
-
-    // <-- НОВОЕ: строим transformMap
     const transformMap = rebuildTransformMap(referenceMap, checkboxes);
-
-    // <-- ДОБАВИТЬ ЛОГ ЗДЕСЬ
-    console.log("Morphogrammer: отправляем transformMap", transformMap);
 
     const response = await chrome.tabs.sendMessage(
       tab.id,
@@ -175,8 +169,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         frameId: info.frameId || 0
       }
     );
-
-    console.log("Morphogrammer: результат преобразования:", response);
   } catch (err) {
     console.warn(
       "Morphogrammer: content script недоступен на этой странице.",
@@ -185,7 +177,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-// <-- НОВОЕ: обработка горячей клавиши
+// обработка горячей клавиши
 chrome.commands.onCommand.addListener(async (command) => {
   if (command !== "transform-selection") {
     return;
@@ -219,8 +211,6 @@ chrome.commands.onCommand.addListener(async (command) => {
         frameId: 0
       }
     );
-
-    console.log("Morphogrammer: результат (горячая клавиша):", response);
   } catch (err) {
     console.warn(
       "Morphogrammer: content script недоступен на этой странице.",

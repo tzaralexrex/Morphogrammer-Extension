@@ -242,7 +242,7 @@ function createScriptCell(cyr, currentValue, script, alphabet, isUnicode = false
   innerDiv.style.flexDirection = "row";
   innerDiv.style.gap = "0.25rem";
   innerDiv.style.alignItems = "center";
-  innerDiv.style.justifyContent = "center"; // <-- Добавлено
+  innerDiv.style.justifyContent = "center";
 
   if (isUnicode) {
     // Контейнер для input + кнопки
@@ -446,7 +446,7 @@ function renderTable() {
 // Сохранение настроек
 function autoSave() {
   const newMap = {};
-  const cyrillic = alphabetCyr.filter(c => c); // <-- Исправлено
+  const cyrillic = alphabetCyr.filter(c => c);
 
   cyrillic.forEach((cyr) => {
     const row = Array.from(tbody.querySelectorAll("tr")).find(tr => 
@@ -536,7 +536,7 @@ function loadSettings() {
 
     renderCheckboxes();
     renderTable();
-    updatePreview(); // <-- Исправление: вызываем updatePreview()
+    updatePreview();
     
     // Получение актуальных горячих клавиш
     chrome.commands.getAll((commands) => {
@@ -551,5 +551,11 @@ function loadSettings() {
     });
   });
 }
+
+// Открытие страницы горячих клавиш
+document.getElementById("shortcutsLink").onclick = (e) => {
+  e.preventDefault();
+  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+};
 
 loadSettings();

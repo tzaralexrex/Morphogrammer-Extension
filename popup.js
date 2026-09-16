@@ -122,8 +122,6 @@ document.getElementById("transformBtn").onclick = async () => {
       action: "transformEditableSelection",
       transformMap
     });
-
-    console.log("Morphogrammer (popup): результат:", response);
   } catch (err) {
     console.warn("Morphogrammer (popup): ошибка:", err);
   }
@@ -170,7 +168,7 @@ checkSelection();
 // Обновляем проверку выделения при фокусе на popup
 window.addEventListener("focus", checkSelection);
 
-// <-- НОВОЕ: получение актуальных горячих клавиш
+// получение актуальных горячих клавиш
 chrome.commands.getAll((commands) => {
   const transformCommand = commands.find(cmd => cmd.name === "transform-selection");
   
@@ -178,3 +176,9 @@ chrome.commands.getAll((commands) => {
     document.getElementById("hotkeyValue").textContent = transformCommand.shortcut;
   }
 });
+
+// Открытие страницы горячих клавиш
+document.getElementById("shortcutsLink").onclick = (e) => {
+  e.preventDefault();
+  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+};
