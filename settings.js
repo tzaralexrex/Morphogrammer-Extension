@@ -173,6 +173,13 @@ function addLrmToHebrewRuns(text) {
   let result = "";
   let run = "";
 
+  function isHebrewOrDigit(ch) {
+    if (!ch) return false;
+    const code = ch.codePointAt(0);
+    // Иврит или цифры 0-9
+    return (code >= 0x0590 && code <= 0x05FF) || (code >= 0x0030 && code <= 0x0039);
+  }
+
   function flushRun() {
     if (!run) return;
     if (run.length <= 1) {
@@ -187,7 +194,7 @@ function addLrmToHebrewRuns(text) {
 
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-    if (isHebrewChar(ch)) {
+    if (isHebrewOrDigit(ch)) {
       run += ch;
     } else {
       flushRun();
