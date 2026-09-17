@@ -133,6 +133,24 @@ function cloneReferenceMap(src) {
   return out;
 }
 
+// Детекция Firefox
+function isFirefox() {
+  return typeof browser !== 'undefined' || navigator.userAgent.includes('Firefox');
+}
+
+// Открытие страницы настройки горячих клавиш
+function openShortcutsPage() {
+  // Firefox 109+: пробуем API
+  if (chrome.commands && chrome.commands.openShortcutSettings) {
+    chrome.commands.openShortcutSettings();
+    return;
+  }
+  
+  // Фолбэк: открываем страницу вручную
+  const url = isFirefox() ? 'about:addons' : 'chrome://extensions/shortcuts';
+  chrome.tabs.create({ url });
+}
+
 // Построение transformMap на основе referenceMap и checkboxes
 function rebuildTransformMap() {
   const transformMap = Object.create(null);
@@ -559,10 +577,17 @@ function loadSettings() {
   });
 }
 
+// Открытие страницы настройки горячих клавиш
+function openShortcutsPage() {
+  chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+}
+
 // Открытие страницы горячих клавиш
 document.getElementById("shortcutsLink").onclick = (e) => {
   e.preventDefault();
-  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+  e.stopPropagation();
+  openShortcutsPage();
+  return false;
 };
 
 loadSettings();

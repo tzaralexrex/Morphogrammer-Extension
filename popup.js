@@ -8,6 +8,11 @@
 
 let hasSelection = false;
 
+// Открытие страницы настройки горячих клавиш
+function openShortcutsPage() {
+  chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+}
+
 // Отрисовка чекбоксов
 function renderCheckboxes() {
   const container = document.getElementById("checkboxes");
@@ -180,5 +185,7 @@ chrome.commands.getAll((commands) => {
 // Открытие страницы горячих клавиш
 document.getElementById("shortcutsLink").onclick = (e) => {
   e.preventDefault();
-  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+  e.stopPropagation();
+  openShortcutsPage();
+  return false;
 };
