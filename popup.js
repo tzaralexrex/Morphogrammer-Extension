@@ -8,14 +8,26 @@
 
 let hasSelection = false;
 
-// Открытие страницы настройки горячих клавиш
-function openShortcutsPage() {
-  chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+function isFirefox() {
+  return navigator.userAgent.includes("Firefox");
 }
 
-// Отрисовка чекбоксов
+function openShortcutsPage() {
+  if (chrome.commands && chrome.commands.openShortcutSettings) {
+    chrome.commands.openShortcutSettings();
+    return;
+  }
+
+  const url = isFirefox()
+    ? "about:addons"
+    : "chrome://extensions/shortcuts";
+
+  chrome.tabs.create({ url });
+}
+
 function renderCheckboxes() {
   const container = document.getElementById("checkboxes");
+
   container.innerHTML = `
     <label><input type="checkbox" id="cb-lat" ${checkboxes.lat ? "checked" : ""}> Латиница</label>
     <label><input type="checkbox" id="cb-gr" ${checkboxes.gr ? "checked" : ""}> Греческий</label>
@@ -24,37 +36,38 @@ function renderCheckboxes() {
     <label><input type="checkbox" id="cb-unicode" ${checkboxes.unicode ? "checked" : ""}> Unicode</label>
   `;
 
-  // Обработчики
-  document.getElementById("cb-lat").onchange = (e) => {
-    checkboxes.lat = e.target.checked;
+  document.getElementById("cb-lat").onchange = (event) => {
+    checkboxes.lat = event.target.checked;
     saveCheckboxes();
   };
-  document.getElementById("cb-gr").onchange = (e) => {
-    checkboxes.gr = e.target.checked;
+
+  document.getElementById("cb-gr").onchange = (event) => {
+    checkboxes.gr = event.target.checked;
     saveCheckboxes();
   };
-  document.getElementById("cb-he").onchange = (e) => {
-    checkboxes.he = e.target.checked;
+
+  document.getElementById("cb-he").onchange = (event) => {
+    checkboxes.he = event.target.checked;
     saveCheckboxes();
   };
-  document.getElementById("cb-digit").onchange = (e) => {
-    checkboxes.digit = e.target.checked;
+
+  document.getElementById("cb-digit").onchange = (event) => {
+    checkboxes.digit = event.target.checked;
     saveCheckboxes();
   };
-  document.getElementById("cb-unicode").onchange = (e) => {
-    checkboxes.unicode = e.target.checked;
+
+  document.getElementById("cb-unicode").onchange = (event) => {
+    checkboxes.unicode = event.target.checked;
     saveCheckboxes();
   };
 }
 
-// Сохранение чекбоксов
 function saveCheckboxes() {
-  chrome.storage.sync.set({ checkboxes });
+  chrome.storage.local.set({ checkboxes });
 }
 
-// Загрузка чекбоксов
 function loadCheckboxes() {
-  chrome.storage.sync.get(["checkboxes"], (result) => {
+  chrome.storage.local.get(["checkboxes"], (result) => {
     if (result.checkboxes) {
       checkboxes = result.checkboxes;
     }
@@ -62,30 +75,23 @@ function loadCheckboxes() {
   });
 }
 
-// Проверка наличия выделения
+// для Firefox используем background как посредника
 async function checkSelection() {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (!tab?.id) {
-      hasSelection = false;
-      updateButton();
-      return;
-    }
-
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      action: "checkSelection"
+    // Пытаемся через background (Firefox-совместимый способ)
+    const response = await chrome.runtime.sendMessage({
+      action: "checkSelectionViaBackground"
     });
 
     hasSelection = response?.hasSelection || false;
     updateButton();
-  } catch (err) {
+  } catch (error) {
+    console.warn("Morphogrammer popup: checkSelection error:", error);
     hasSelection = false;
     updateButton();
   }
 }
 
-// Обновление кнопки
 function updateButton() {
   const btn = document.getElementById("transformBtn");
   const hint = document.getElementById("hint");
@@ -101,39 +107,33 @@ function updateButton() {
   }
 }
 
-// Преобразование
+// для Firefox используем background как посредника
 document.getElementById("transformBtn").onclick = async () => {
   if (!hasSelection) {
     return;
   }
 
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (!tab?.id) {
-      return;
-    }
-
-    const storageData = await new Promise((resolve) => {
-      chrome.storage.sync.get(["referenceMap", "checkboxes"], resolve);
-    });
+    const storageData = await chrome.storage.local.get([
+      "referenceMap",
+      "checkboxes"
+    ]);
 
     const referenceMap = storageData.referenceMap || {};
     const checkboxesStorage = storageData.checkboxes || checkboxes;
-
     const transformMap = buildTransformMap(referenceMap, checkboxesStorage);
 
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      action: "transformEditableSelection",
+    // Отправляем через background (Firefox-совместимый способ)
+    await chrome.runtime.sendMessage({
+      action: "transformViaBackground",
       transformMap
     });
-  } catch (err) {
-    console.warn("Morphogrammer (popup): ошибка:", err);
+  } catch (error) {
+    console.warn("Morphogrammer (popup): ошибка:", error);
   }
 };
 
-// Построение transformMap
-function buildTransformMap(referenceMap, checkboxes) {
+function buildTransformMap(referenceMap, selectedCheckboxes) {
   const alphabetCyr = [
     "",
     "А","Б","В","Г","Д","Е","Ё","Ж","З","И","Й","К","Л","М","Н","О","П","Р","С","Т","У","Ф","Х","Ц","Ч","Ш","Щ","Ъ","Ы","Ь","Э","Ю","Я",
@@ -143,20 +143,29 @@ function buildTransformMap(referenceMap, checkboxes) {
   const transformMap = Object.create(null);
 
   for (const cyr of alphabetCyr) {
-    if (!cyr) continue;
+    if (!cyr) {
+      continue;
+    }
 
-    const ref = referenceMap[cyr] || { lat:"", gr:"", he:"", digit:"", unicode:"" };
+    const ref = referenceMap[cyr] || {
+      lat: "",
+      gr: "",
+      he: "",
+      digit: "",
+      unicode: ""
+    };
+
     let target = "";
 
-    if (checkboxes.unicode && ref.unicode) {
+    if (selectedCheckboxes.unicode && ref.unicode) {
       target = ref.unicode;
-    } else if (checkboxes.digit && ref.digit) {
+    } else if (selectedCheckboxes.digit && ref.digit) {
       target = ref.digit;
-    } else if (checkboxes.he && ref.he) {
+    } else if (selectedCheckboxes.he && ref.he) {
       target = ref.he;
-    } else if (checkboxes.gr && ref.gr) {
+    } else if (selectedCheckboxes.gr && ref.gr) {
       target = ref.gr;
-    } else if (checkboxes.lat && ref.lat) {
+    } else if (selectedCheckboxes.lat && ref.lat) {
       target = ref.lat;
     }
 
@@ -166,26 +175,25 @@ function buildTransformMap(referenceMap, checkboxes) {
   return transformMap;
 }
 
-// Инициализация
 loadCheckboxes();
 checkSelection();
 
-// Обновляем проверку выделения при фокусе на popup
 window.addEventListener("focus", checkSelection);
 
-// получение актуальных горячих клавиш
 chrome.commands.getAll((commands) => {
-  const transformCommand = commands.find(cmd => cmd.name === "transform-selection");
-  
+  const transformCommand = commands.find(
+    (command) => command.name === "transform-selection"
+  );
+
   if (transformCommand && transformCommand.shortcut) {
-    document.getElementById("hotkeyValue").textContent = transformCommand.shortcut;
+    document.getElementById("hotkeyValue").textContent =
+      transformCommand.shortcut;
   }
 });
 
-// Открытие страницы горячих клавиш
-document.getElementById("shortcutsLink").onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+document.getElementById("shortcutsLink").onclick = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
   openShortcutsPage();
   return false;
 };

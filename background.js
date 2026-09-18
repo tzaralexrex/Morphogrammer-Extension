@@ -124,6 +124,54 @@ function rebuildTransformMap(referenceMap, checkboxes) {
   return transformMap;
 }
 
+// Обработчик сообщений от popup (для Firefox-совместимости)
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "checkSelectionViaBackground") {
+    chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
+      if (!tab?.id) {
+        sendResponse({ hasSelection: false });
+        return;
+      }
+
+      try {
+        const response = await chrome.tabs.sendMessage(tab.id, {
+          action: "checkSelection"
+        }, { frameId: 0 });
+
+        sendResponse(response);
+      } catch (error) {
+        console.warn("Morphogrammer background: checkSelection error:", error);
+        sendResponse({ hasSelection: false });
+      }
+    });
+
+    return true; // для асинхронного sendResponse
+  }
+
+  if (message.action === "transformViaBackground") {
+    chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
+      if (!tab?.id) {
+        sendResponse({ ok: false, reason: "Active tab not found" });
+        return;
+      }
+
+      try {
+        await chrome.tabs.sendMessage(tab.id, {
+          action: "transformEditableSelection",
+          transformMap: message.transformMap
+        }, { frameId: 0 });
+
+        sendResponse({ ok: true });
+      } catch (error) {
+        console.warn("Morphogrammer background: transform error:", error);
+        sendResponse({ ok: false, reason: error.message });
+      }
+    });
+
+    return true;
+  }
+});
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
@@ -133,13 +181,12 @@ chrome.runtime.onInstalled.addListener(() => {
     });
   });
 
-  // инициализируем referenceMap и checkboxes, если их нет
-  chrome.storage.sync.get(["referenceMap", "checkboxes"], (result) => {
+  chrome.storage.local.get(["referenceMap", "checkboxes"], (result) => {
     if (!result.referenceMap) {
-      chrome.storage.sync.set({ referenceMap: defaultReferenceMap });
+      chrome.storage.local.set({ referenceMap: defaultReferenceMap });
     }
     if (!result.checkboxes) {
-      chrome.storage.sync.set({ checkboxes: defaultCheckboxes });
+      chrome.storage.local.set({ checkboxes: defaultCheckboxes });
     }
   });
 });
@@ -151,7 +198,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   try {
     const storageData = await new Promise((resolve) => {
-      chrome.storage.sync.get(["referenceMap", "checkboxes"], resolve);
+      chrome.storage.local.get(["referenceMap", "checkboxes"], resolve);
     });
 
     const referenceMap = storageData.referenceMap || defaultReferenceMap;
@@ -191,16 +238,14 @@ chrome.commands.onCommand.addListener(async (command) => {
       return;
     }
 
-    // Загружаем referenceMap и checkboxes
     const storageData = await new Promise((resolve) => {
-      chrome.storage.sync.get(["referenceMap", "checkboxes"], resolve);
+      chrome.storage.local.get(["referenceMap", "checkboxes"], resolve);
     });
 
     const referenceMap = storageData.referenceMap || defaultReferenceMap;
     const checkboxes = storageData.checkboxes || defaultCheckboxes;
     const transformMap = rebuildTransformMap(referenceMap, checkboxes);
 
-    // Отправляем команду в content script
     const response = await chrome.tabs.sendMessage(
       tab.id,
       {

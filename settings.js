@@ -135,20 +135,25 @@ function cloneReferenceMap(src) {
 
 // Детекция Firefox
 function isFirefox() {
-  return typeof browser !== 'undefined' || navigator.userAgent.includes('Firefox');
+  return navigator.userAgent.includes("Firefox");
 }
 
 // Открытие страницы настройки горячих клавиш
-function openShortcutsPage() {
-  // Firefox 109+: пробуем API
+async function openShortcutsPage() {
   if (chrome.commands && chrome.commands.openShortcutSettings) {
-    chrome.commands.openShortcutSettings();
-    return;
+    try {
+      await chrome.commands.openShortcutSettings();
+      return;
+    } catch (error) {
+      console.warn("Morphogrammer (settings): не удалось открыть настройки хоткеев через API:", error);
+    }
   }
-  
-  // Фолбэк: открываем страницу вручную
-  const url = isFirefox() ? 'about:addons' : 'chrome://extensions/shortcuts';
-  chrome.tabs.create({ url });
+
+  const url = isFirefox()
+    ? "about:addons"
+    : "chrome://extensions/shortcuts";
+
+  await chrome.tabs.create({ url });
 }
 
 // Построение transformMap на основе referenceMap и checkboxes
@@ -194,7 +199,6 @@ function addLrmToHebrewRuns(text) {
   function isHebrewOrDigit(ch) {
     if (!ch) return false;
     const code = ch.codePointAt(0);
-    // Иврит или цифры 0-9
     return (code >= 0x0590 && code <= 0x05FF) || (code >= 0x0030 && code <= 0x0039);
   }
 
@@ -270,13 +274,11 @@ function createScriptCell(cyr, currentValue, script, alphabet, isUnicode = false
   innerDiv.style.justifyContent = "center";
 
   if (isUnicode) {
-    // Контейнер для input + кнопки
     const container = document.createElement("div");
     container.style.display = "flex";
     container.style.gap = "0.25rem";
     container.style.alignItems = "center";
 
-    // Input
     const input = document.createElement("input");
     input.type = "text";
     input.value = currentValue || "";
@@ -286,7 +288,6 @@ function createScriptCell(cyr, currentValue, script, alphabet, isUnicode = false
       saveCell(cyr, "unicode", input.value);
     };
     
-    // Кнопка "Выбор"
     const btn = document.createElement("button");
     btn.textContent = "⋯";
     btn.title = "Выбрать символ из таблицы Unicode";
@@ -298,18 +299,15 @@ function createScriptCell(cyr, currentValue, script, alphabet, isUnicode = false
     container.appendChild(btn);
     innerDiv.appendChild(container);
   } else {
-    // SELECT
     const select = createSelect(alphabet, currentValue);
     select.className = "map-select";
     select.style.width = "80px";
     select.onchange = () => {
       saveCell(cyr, script, select.value);
-      // Синхронизируем input с select
       if (input) input.value = select.value;
     };
     innerDiv.appendChild(select);
 
-    // INPUT (для ручного ввода)
     const input = document.createElement("input");
     input.type = "text";
     input.value = currentValue || "";
@@ -317,7 +315,6 @@ function createScriptCell(cyr, currentValue, script, alphabet, isUnicode = false
     input.className = script;
     input.oninput = () => {
       saveCell(cyr, script, input.value);
-      // Не синхронизируем select с input (оставляем select как есть)
     };
     innerDiv.appendChild(input);
   }
@@ -339,6 +336,7 @@ function saveCell(cyr, script, value) {
   }
   currentReferenceMap[cyr][script] = value;
   updatePreview();
+  autoSave();
 }
 
 // Сброс строки к умолчаниям
@@ -357,6 +355,7 @@ function resetRowToDefault(cyr) {
   
   renderTable();
   updatePreview();
+  autoSave();
 }
 
 // Отрисовка чекбоксов
@@ -372,7 +371,6 @@ function renderCheckboxes() {
     <label><input type="checkbox" id="cb-unicode" ${checkboxes.unicode ? "checked" : ""}> Unicode</label>
   `;
 
-  // Обработчики
   document.getElementById("cb-lat").onchange = (e) => {
     checkboxes.lat = e.target.checked;
     saveSettings();
@@ -416,7 +414,6 @@ function renderTable() {
 
     const tr = document.createElement("tr");
     
-    // Чередование цветов строк
     const index = alphabetCyr.indexOf(cyr);
     if (index % 2 === 1) {
       tr.style.backgroundColor = "#f9fafb";
@@ -424,34 +421,27 @@ function renderTable() {
 
     const ref = currentReferenceMap[cyr] || { lat:"", gr:"", he:"", digit:"", unicode:cyr };
 
-    // Кириллица (просто текст)
     const tdCyr = document.createElement("td");
     tdCyr.textContent = cyr;
     tdCyr.style.fontWeight = "600";
     tdCyr.style.textAlign = "center";
     tr.appendChild(tdCyr);
 
-    // Латиница
     const tdLat = createScriptCell(cyr, ref.lat, "lat", alphabetLat);
     tr.appendChild(tdLat);
 
-    // Греческий
     const tdGr = createScriptCell(cyr, ref.gr, "gr", alphabetGr);
     tr.appendChild(tdGr);
 
-    // Иврит
     const tdHe = createScriptCell(cyr, ref.he, "he", alphabetHe);
     tr.appendChild(tdHe);
 
-    // Цифры
     const tdDigit = createScriptCell(cyr, ref.digit, "digit", digitsList);
     tr.appendChild(tdDigit);
 
-    // Unicode
     const tdUnicode = createScriptCell(cyr, ref.unicode || cyr, "unicode", alphabetCyr, true);
     tr.appendChild(tdUnicode);
 
-    // Сброс строки
     const tdReset = document.createElement("td");
     tdReset.style.textAlign = "center";
     const btnReset = document.createElement("button");
@@ -469,40 +459,45 @@ function renderTable() {
 }
 
 // Сохранение настроек
-function autoSave() {
-  const newMap = {};
-  const cyrillic = alphabetCyr.filter(c => c);
+async function autoSave() {
+  try {
+    const newMap = {};
+    const cyrillic = alphabetCyr.filter(c => c);
 
-  cyrillic.forEach((cyr) => {
-    const row = Array.from(tbody.querySelectorAll("tr")).find(tr => 
-      tr.cells[0].textContent === cyr
-    );
-    if (!row) return;
+    cyrillic.forEach((cyr) => {
+      const row = Array.from(tbody.querySelectorAll("tr")).find(tr => 
+        tr.cells[0].textContent === cyr
+      );
+      if (!row) return;
 
-    const latinSelect = row.querySelector(".lat");
-    const greekSelect = row.querySelector(".gr");
-    const hebrewSelect = row.querySelector(".he");
-    const digitSelect = row.querySelector(".digit");
-    const unicodeInput = row.querySelector(".unicode");
+      const latinSelect = row.querySelector(".lat");
+      const greekSelect = row.querySelector(".gr");
+      const hebrewSelect = row.querySelector(".he");
+      const digitSelect = row.querySelector(".digit");
+      const unicodeInput = row.querySelector(".unicode");
 
-    newMap[cyr] = {
-      lat: latinSelect ? latinSelect.value : "",
-      gr: greekSelect ? greekSelect.value : "",
-      he: hebrewSelect ? hebrewSelect.value : "",
-      digit: digitSelect ? digitSelect.value : "",
-      unicode: unicodeInput ? unicodeInput.value : cyr,
-    };
-  });
+      newMap[cyr] = {
+        lat: latinSelect ? latinSelect.value : "",
+        gr: greekSelect ? greekSelect.value : "",
+        he: hebrewSelect ? hebrewSelect.value : "",
+        digit: digitSelect ? digitSelect.value : "",
+        unicode: unicodeInput ? unicodeInput.value : cyr,
+      };
+    });
 
-  chrome.storage.local.set({ userMap: newMap });
+    await chrome.storage.local.set({ referenceMap: newMap, checkboxes });
+  } catch (error) {
+    console.warn("Morphogrammer (settings): не удалось сохранить настройки:", error);
+  }
 }
 
 // Сброс к дефолту
-document.getElementById("resetDefault").onclick = () => {
+document.getElementById("resetDefault").onclick = async () => {
   if (!confirm("Сбросить всю таблицу соответствий к значениям по умолчанию?")) return;
   currentReferenceMap = cloneReferenceMap(defaultReferenceMap);
   renderTable();
-  saveSettings();
+  updatePreview();
+  await autoSave();
 };
 
 // Экспорт
@@ -531,7 +526,8 @@ importFile.onchange = (e) => {
       if (typeof obj !== "object" || obj === null) throw new Error("Неверный формат JSON");
       currentReferenceMap = obj;
       renderTable();
-      saveSettings();
+      updatePreview();
+      autoSave();
     } catch (err) {
       alert("Ошибка импорта: " + err.message);
     }
@@ -539,18 +535,21 @@ importFile.onchange = (e) => {
   reader.readAsText(file);
 };
 
-function saveSettings() {
-  chrome.storage.sync.set({ referenceMap: currentReferenceMap, checkboxes }, () => {
+async function saveSettings() {
+  try {
+    await chrome.storage.local.set({ referenceMap: currentReferenceMap, checkboxes });
     updatePreview();
-  });
+  } catch (error) {
+    console.warn("Morphogrammer (settings): не удалось сохранить настройки:", error);
+  }
 }
 
-function loadSettings() {
-  chrome.storage.sync.get(["replaceMap", "referenceMap", "checkboxes"], (result) => {
+async function loadSettings() {
+  try {
+    const result = await chrome.storage.local.get(["referenceMap", "checkboxes"]);
+
     if (result.referenceMap) {
       currentReferenceMap = result.referenceMap;
-    } else if (result.replaceMap) {
-      currentReferenceMap = cloneReferenceMap(defaultReferenceMap);
     } else {
       currentReferenceMap = cloneReferenceMap(defaultReferenceMap);
     }
@@ -563,29 +562,28 @@ function loadSettings() {
     renderTable();
     updatePreview();
     
-    // Получение актуальных горячих клавиш
-    chrome.commands.getAll((commands) => {
-      const transformCommand = commands.find(cmd => cmd.name === "transform-selection");
-      
-      if (transformCommand && transformCommand.shortcut) {
-        const hotkeyElement = document.getElementById("hotkeyValue");
-        if (hotkeyElement) {
-          hotkeyElement.textContent = transformCommand.shortcut;
-        }
+    const commands = await chrome.commands.getAll();
+    const transformCommand = commands.find(cmd => cmd.name === "transform-selection");
+    
+    if (transformCommand && transformCommand.shortcut) {
+      const hotkeyElement = document.getElementById("hotkeyValue");
+      if (hotkeyElement) {
+        hotkeyElement.textContent = transformCommand.shortcut;
       }
-    });
-  });
+    }
+  } catch (error) {
+    console.warn("Morphogrammer (settings): не удалось загрузить настройки:", error);
+    currentReferenceMap = cloneReferenceMap(defaultReferenceMap);
+    renderCheckboxes();
+    renderTable();
+    updatePreview();
+  }
 }
 
 // Открытие страницы настройки горячих клавиш
-function openShortcutsPage() {
-  chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
-}
-
-// Открытие страницы горячих клавиш
-document.getElementById("shortcutsLink").onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+document.getElementById("shortcutsLink").onclick = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
   openShortcutsPage();
   return false;
 };
