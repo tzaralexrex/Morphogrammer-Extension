@@ -106,16 +106,25 @@ function rebuildTransformMap(referenceMap, checkboxes) {
     const ref = referenceMap[cyr] || { lat:"", gr:"", he:"", digit:"", unicode:"" };
     let target = "";
 
+    // Проверяем приоритеты
     if (checkboxes.unicode && ref.unicode) {
-      target = ref.unicode;
-    } else if (checkboxes.digit && ref.digit) {
-      target = ref.digit;
-    } else if (checkboxes.he && ref.he) {
-      target = ref.he;
-    } else if (checkboxes.gr && ref.gr) {
-      target = ref.gr;
-    } else if (checkboxes.lat && ref.lat) {
-      target = ref.lat;
+      // Если юникодовый символ совпадает с исходным — пропускаем
+      if (ref.unicode !== cyr) {
+        target = ref.unicode;
+      }
+    }
+
+    // Если target ещё пуст, проверяем остальные приоритеты
+    if (!target) {
+      if (checkboxes.digit && ref.digit) {
+        target = ref.digit;
+      } else if (checkboxes.he && ref.he) {
+        target = ref.he;
+      } else if (checkboxes.gr && ref.gr) {
+        target = ref.gr;
+      } else if (checkboxes.lat && ref.lat) {
+        target = ref.lat;
+      }
     }
 
     transformMap[cyr] = target;

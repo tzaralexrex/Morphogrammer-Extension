@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Morphogrammer — Настройки</title>
   <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="unicode-picker.css">
 </head>
 <body>
   <h1>Morphogrammer — Таблица соответствий</h1>
@@ -103,6 +104,31 @@
     </ol>
   </div>
 
-  <script src="settings.js"></script>
+  <!-- Unicode Picker Overlay -->
+  <div id="unicodePickerOverlay" class="unicode-picker-overlay" style="display: none;">
+    <div class="unicode-picker-modal">
+      <div class="unicode-picker-header">
+        <div class="unicode-picker-search">
+          <input type="text" placeholder="Введите символ или код (U+03B1)..." />
+        </div>
+        <select class="unicode-picker-block-select"></select>
+        <button class="unicode-picker-close" title="Закрыть">&times;</button>
+      </div>
+      <div class="unicode-picker-body">
+        <div class="unicode-picker-grid"></div>
+      </div>
+      <div class="unicode-picker-info">
+        <span>Блок: <strong>—</strong></span>
+        <span>Символ: <kbd>—</kbd> Код: <kbd>—</kbd></span>
+      </div>
+      <div class="unicode-picker-footer">
+        <button class="secondary">Отмена</button>
+        <button class="primary">Вставить</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="unicode-picker.js"></script>
+  <script type="module" src="settings.js"></script>
 </body>
 </html>

@@ -4,51 +4,47 @@ let transformMap = {};
 let lastEditable = null;
 let lastRange = null;
 
-// обработка иврита (LRM)
+// ===== ОБРАБОТКА ИВРИТА (LRM) =====
+
 function isHebrewChar(ch) {
   if (!ch) return false;
   const code = ch.codePointAt(0);
   return code >= 0x0590 && code <= 0x05FF;
 }
 
+function isHebrewOrDigit(ch) {
+  if (!ch) return false;
+  const code = ch.codePointAt(0);
+  return (code >= 0x0590 && code <= 0x05FF) || (code >= 0x0030 && code <= 0x0039);
+}
+
 function addLrmToHebrewRuns(text) {
   const LRM = "\u200E";
   let result = "";
-  let run = "";
-
-  function isHebrewOrDigit(ch) {
-    if (!ch) return false;
-    const code = ch.codePointAt(0);
-    // Иврит или цифры 0-9
-    return (code >= 0x0590 && code <= 0x05FF) || (code >= 0x0030 && code <= 0x0039);
-  }
-
-  function flushRun() {
-    if (!run) return;
-    if (run.length <= 1) {
-      result += run;
-    } else {
-      for (let i = 0; i < run.length; i++) {
-        result += LRM + run[i];
-      }
-    }
-    run = "";
-  }
+  let inRun = false;
 
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-    if (isHebrewOrDigit(ch)) {
-      run += ch;
+    const isHD = isHebrewOrDigit(ch);
+    const isSpace = ch === " " || ch === "\t" || ch === "\n";
+
+    if (isHD) {
+      result += LRM + ch;
+      inRun = true;
+    } else if (isSpace && inRun) {
+      // Пробел внутри run — добавляем LRM
+      result += LRM + ch;
     } else {
-      flushRun();
       result += ch;
+      inRun = false;
     }
   }
-  flushRun();
+
   return result;
 }
 
-// преобразование текста с использованием transformMap
+// ===== ТРАНСФОРМАЦИЯ ТЕКСТА =====
+
 function transformText(text) {
   let out = "";
   for (let i = 0; i < text.length; i++) {
@@ -60,17 +56,16 @@ function transformText(text) {
       out += ch;
     }
   }
-  // Обработка иврита
   out = addLrmToHebrewRuns(out);
   return out;
 }
 
-// обработчик checkSelection
+// ===== ОБРАБОТЧИК СООБЩЕНИЙ =====
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkSelection") {
     const selection = window.getSelection();
     const hasSelection = selection && selection.rangeCount > 0 && selection.toString().length > 0;
-
     sendResponse({ hasSelection });
     return;
   }
@@ -79,7 +74,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  // получаем transformMap из сообщения
   if (message.transformMap) {
     transformMap = message.transformMap;
   }
@@ -92,7 +86,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         ok: false,
         reason: "Выделение находится не в текстовом поле или редакторе."
       };
-
       console.warn("Morphogrammer:", result.reason);
       sendResponse(result);
       return;
@@ -100,10 +93,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     let result;
 
-    if (
-      editable instanceof HTMLTextAreaElement ||
-      isTextInput(editable)
-    ) {
+    if (editable instanceof HTMLTextAreaElement || isTextInput(editable)) {
       result = replaceInInput(editable);
     } else {
       result = replaceInContentEditable(editable);
@@ -113,11 +103,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } catch (error) {
     const result = {
       ok: false,
-      reason: error && error.message
-        ? error.message
-        : String(error)
+      reason: error && error.message ? error.message : String(error)
     };
-
     console.error("Morphogrammer: ошибка замены:", error);
     sendResponse(result);
   }
@@ -129,22 +116,25 @@ function isTextInput(element) {
   if (!(element instanceof HTMLInputElement)) {
     return false;
   }
-
   const type = (element.type || "text").toLowerCase();
-
-  return [
-    "text",
-    "search",
-    "url",
-    "tel",
-    "email",
-    "password"
-  ].includes(type);
+  return ["text", "search", "url", "tel", "email", "password"].includes(type);
 }
 
 function isEditableElement(element) {
   if (!(element instanceof Element)) {
     return false;
+  }
+
+  let parent = element;
+  while (parent && parent !== document && parent.parentElement) {
+    const ce = parent.getAttribute("contenteditable");
+    if (ce === "false") {
+      return false;
+    }
+    if (ce === "true" || ce === "plaintext-only") {
+      break;
+    }
+    parent = parent.parentElement;
   }
 
   return (
@@ -172,10 +162,35 @@ function getEditableFromNode(node) {
     return null;
   }
 
-  const candidate = element.closest(
-    "textarea, input, [contenteditable='true'], [contenteditable='plaintext-only'], [role='textbox']"
-  );
+  let parent = element;
+  
+  while (parent && parent !== document && parent.parentElement) {
+    const ce = parent.getAttribute("contenteditable");
+    
+    if (ce === "false") {
+      return null;
+    }
+    
+    if (ce === "true" || ce === "plaintext-only") {
+      let checkParent = parent.parentElement;
+      while (checkParent && checkParent !== document) {
+        const ce2 = checkParent.getAttribute("contenteditable");
+        if (ce2 === "false") {
+          return null;
+        }
+        if (ce2 === "true" || ce2 === "plaintext-only") {
+          break;
+        }
+        checkParent = checkParent.parentElement;
+      }
+      
+      return parent;
+    }
+    
+    parent = parent.parentElement;
+  }
 
+  const candidate = element.closest("textarea, input");
   if (candidate && isEditableElement(candidate)) {
     return candidate;
   }
@@ -204,10 +219,7 @@ function rangeBelongsToElement(range, element) {
 function rememberCurrentEditableSelection() {
   const activeElement = document.activeElement;
 
-  if (
-    activeElement instanceof HTMLTextAreaElement ||
-    isTextInput(activeElement)
-  ) {
+  if (activeElement instanceof HTMLTextAreaElement || isTextInput(activeElement)) {
     lastEditable = activeElement;
     lastRange = null;
     return;
@@ -407,10 +419,7 @@ function replaceInContentEditable(element) {
 function getTargetEditable() {
   const activeElement = document.activeElement;
 
-  if (
-    activeElement instanceof HTMLTextAreaElement ||
-    isTextInput(activeElement)
-  ) {
+  if (activeElement instanceof HTMLTextAreaElement || isTextInput(activeElement)) {
     return activeElement;
   }
 

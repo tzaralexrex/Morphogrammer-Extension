@@ -157,16 +157,25 @@ function buildTransformMap(referenceMap, selectedCheckboxes) {
 
     let target = "";
 
+    // Проверяем приоритеты
     if (selectedCheckboxes.unicode && ref.unicode) {
-      target = ref.unicode;
-    } else if (selectedCheckboxes.digit && ref.digit) {
-      target = ref.digit;
-    } else if (selectedCheckboxes.he && ref.he) {
-      target = ref.he;
-    } else if (selectedCheckboxes.gr && ref.gr) {
-      target = ref.gr;
-    } else if (selectedCheckboxes.lat && ref.lat) {
-      target = ref.lat;
+      // Если юникодовый символ совпадает с исходным — пропускаем
+      if (ref.unicode !== cyr) {
+        target = ref.unicode;
+      }
+    }
+
+    // Если target ещё пуст, проверяем остальные приоритеты
+    if (!target) {
+      if (selectedCheckboxes.digit && ref.digit) {
+        target = ref.digit;
+      } else if (selectedCheckboxes.he && ref.he) {
+        target = ref.he;
+      } else if (selectedCheckboxes.gr && ref.gr) {
+        target = ref.gr;
+      } else if (selectedCheckboxes.lat && ref.lat) {
+        target = ref.lat;
+      }
     }
 
     transformMap[cyr] = target;

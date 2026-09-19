@@ -1,4 +1,5 @@
-﻿const tbody = document.querySelector("#mapTable tbody");
+﻿import { openUnicodePicker as openUnicodePickerModal } from "./unicode-picker.js";
+const tbody = document.querySelector("#mapTable tbody");
 let currentReferenceMap = {};
 let checkboxes = {
   lat: true,
@@ -166,16 +167,25 @@ function rebuildTransformMap() {
     const ref = currentReferenceMap[cyr] || { lat:"", gr:"", he:"", digit:"", unicode:"" };
     let target = "";
 
+    // Проверяем приоритеты
     if (checkboxes.unicode && ref.unicode) {
-      target = ref.unicode;
-    } else if (checkboxes.digit && ref.digit) {
-      target = ref.digit;
-    } else if (checkboxes.he && ref.he) {
-      target = ref.he;
-    } else if (checkboxes.gr && ref.gr) {
-      target = ref.gr;
-    } else if (checkboxes.lat && ref.lat) {
-      target = ref.lat;
+      // Если юникодовый символ совпадает с исходным — пропускаем
+      if (ref.unicode !== cyr) {
+        target = ref.unicode;
+      }
+    }
+
+    // Если target ещё пуст, проверяем остальные приоритеты
+    if (!target) {
+      if (checkboxes.digit && ref.digit) {
+        target = ref.digit;
+      } else if (checkboxes.he && ref.he) {
+        target = ref.he;
+      } else if (checkboxes.gr && ref.gr) {
+        target = ref.gr;
+      } else if (checkboxes.lat && ref.lat) {
+        target = ref.lat;
+      }
     }
 
     transformMap[cyr] = target;
@@ -191,39 +201,33 @@ function isHebrewChar(ch) {
   return code >= 0x0590 && code <= 0x05FF;
 }
 
+function isHebrewOrDigit(ch) {
+  if (!ch) return false;
+  const code = ch.codePointAt(0);
+  return (code >= 0x0590 && code <= 0x05FF) || (code >= 0x0030 && code <= 0x0039);
+}
+
 function addLrmToHebrewRuns(text) {
   const LRM = "\u200E";
   let result = "";
-  let run = "";
-
-  function isHebrewOrDigit(ch) {
-    if (!ch) return false;
-    const code = ch.codePointAt(0);
-    return (code >= 0x0590 && code <= 0x05FF) || (code >= 0x0030 && code <= 0x0039);
-  }
-
-  function flushRun() {
-    if (!run) return;
-    if (run.length <= 1) {
-      result += run;
-    } else {
-      for (let i = 0; i < run.length; i++) {
-        result += LRM + run[i];
-      }
-    }
-    run = "";
-  }
+  let inRun = false;
 
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-    if (isHebrewOrDigit(ch)) {
-      run += ch;
+    const isHD = isHebrewOrDigit(ch);
+    const isSpace = ch === " " || ch === "\t" || ch === "\n";
+
+    if (isHD) {
+      result += LRM + ch;
+      inRun = true;
+    } else if (isSpace && inRun) {
+      result += LRM + ch;
     } else {
-      flushRun();
       result += ch;
+      inRun = false;
     }
   }
-  flushRun();
+
   return result;
 }
 
@@ -324,9 +328,7 @@ function createScriptCell(cyr, currentValue, script, alphabet, isUnicode = false
 }
 
 function openUnicodePicker(inputElement) {
-  // TODO: Открыть модальное окно с таблицей Unicode
-  // При выборе символа: inputElement.value = выбранный символ
-  alert("Таблица Unicode - в разработке");
+  openUnicodePickerModal(inputElement);
 }
 
 // Сохранение ячейки
