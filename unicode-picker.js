@@ -189,6 +189,16 @@ function getPageChars(blockIndex, page) {
   return chars;
 }
 
+// Вставка выбранного символа
+function insertSelectedChar() {
+  if (selectedChar && currentInput) {
+    currentInput.value = selectedChar;
+    currentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    currentInput.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  closeUnicodePicker();
+}
+
 // Отрисовка сетки
 function renderGrid() {
   const grid = document.querySelector(".unicode-picker-grid");
@@ -214,11 +224,20 @@ function renderGrid() {
       cell.classList.add("selected");
     }
 
+    // Одиночный клик — выделение
     cell.onclick = () => {
       if (char) {
         selectedChar = char;
         renderGrid();
         updateInfo();
+      }
+    };
+
+    // Двойной клик — сразу вставка
+    cell.ondblclick = () => {
+      if (char) {
+        selectedChar = char;
+        insertSelectedChar();
       }
     };
 
@@ -333,6 +352,23 @@ export function openUnicodePicker(inputElement, callback) {
     if (e.key === "Escape") {
       closeUnicodePicker();
     }
+  
+    // Стрелки вверх/вниз — переключение блоков
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const delta = e.key === "ArrowUp" ? -1 : 1;
+      const newIndex = currentBlockIndex + delta;
+    
+      // Проверяем границы
+      if (newIndex >= 0 && newIndex < unicodeBlocks.length) {
+        currentBlockIndex = newIndex;
+        currentPage = 0;
+        selectedChar = null;
+        renderBlockSelect();
+        renderGrid();
+        updateInfo();
+      }
+    }  
   };
 
   overlay.addEventListener("keydown", handleKeydown);
@@ -342,13 +378,7 @@ export function openUnicodePicker(inputElement, callback) {
   const insertBtn = overlay.querySelector(".unicode-picker-footer button.primary");
   if (insertBtn) {
     insertBtn.onclick = () => {
-      if (selectedChar && currentInput) {
-        currentInput.value = selectedChar;
-        currentInput.dispatchEvent(new Event("input", { bubbles: true }));
-        currentInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-      closeUnicodePicker();
-      if (callback) callback(selectedChar);
+      insertSelectedChar();
     };
   }
 
