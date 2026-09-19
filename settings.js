@@ -339,7 +339,41 @@ function saveCell(cyr, script, value) {
   currentReferenceMap[cyr][script] = value;
   updatePreview();
   autoSave();
+  
+  // Обновляем только стиль строки, не перерисовывая всю таблицу
+  updateRowStyle(cyr);
 }
+
+// Обновление стиля конкретной строки
+function updateRowStyle(cyr) {
+  const row = Array.from(tbody.querySelectorAll("tr")).find(tr => 
+    tr.cells[0].textContent === cyr
+  );
+  
+  if (!row) return;
+  
+  const ref = currentReferenceMap[cyr] || { lat:"", gr:"", he:"", digit:"", unicode:cyr };
+  
+  // Проверка: есть ли хоть одна замена
+  const hasReplacement = 
+    ref.lat || 
+    ref.gr || 
+    ref.he || 
+    ref.digit || 
+    (ref.unicode && ref.unicode !== cyr);
+  
+  const index = alphabetCyr.indexOf(cyr);
+  
+  if (!hasReplacement) {
+    row.style.backgroundColor = "#e5e7eb"; // Тёмно-серый
+    row.title = "Нет замен для этого символа";
+  } else {
+    // Возвращаем исходный цвет (белый или светло-серый)
+    row.style.backgroundColor = index % 2 === 1 ? "#f9fafb" : "#ffffff";
+    row.title = "";
+  }
+}
+
 
 // Сброс строки к умолчаниям
 function resetRowToDefault(cyr) {
@@ -422,6 +456,19 @@ function renderTable() {
     }
 
     const ref = currentReferenceMap[cyr] || { lat:"", gr:"", he:"", digit:"", unicode:cyr };
+
+    // Проверка: есть ли хоть одна замена
+    const hasReplacement = 
+      ref.lat || 
+      ref.gr || 
+      ref.he || 
+      ref.digit || 
+      (ref.unicode && ref.unicode !== cyr);
+
+    if (!hasReplacement) {
+      tr.style.backgroundColor = "#e5e7eb"; // Тёмно-серый для строк без замен
+      tr.title = "Нет замен для этого символа";
+    }
 
     const tdCyr = document.createElement("td");
     tdCyr.textContent = cyr;
