@@ -11,7 +11,8 @@
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: inherit; /* Не перебивать системный */
+/*  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; */
 }
 
 .unicode-picker-modal {
@@ -98,7 +99,7 @@
   cursor: pointer;
   background: #fff;
   transition: background 0.1s, border-color 0.1s;
-  font-family: "Segoe UI Symbol", "Symbola", "DejaVu Sans", "Arial Unicode MS", sans-serif;
+  font-family: "Noto Sans", "Noto Sans CJK", "Noto Color Emoji", "Segoe UI Symbol", "Segoe UI Emoji", "Cascadia Code", "Lucida Sans Unicode", "Arial Unicode MS", system-ui, sans-serif !important;
   line-height: 1;
 }
 

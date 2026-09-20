@@ -1,7 +1,7 @@
 ﻿{
   "manifest_version": 3,
   "name": "Morphogrammer",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Заменяет выделенный текст по пользовательской таблице замен с приоритетом столбцов (латиница, греческий, иврит, цифры, Unicode).",
   
   "browser_specific_settings": {
