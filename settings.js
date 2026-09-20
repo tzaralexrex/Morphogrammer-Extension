@@ -441,6 +441,16 @@ function updatePreview() {
   previewResult.value = transformText(sourceText, transformMap);
 }
 
+// Авто-обновление при вводе текста в исходное поле
+function initPreviewAutoUpdate() {
+  const previewSource = document.querySelector("#preview-source");
+  if (!previewSource) return;
+
+  previewSource.addEventListener("input", () => {
+    updatePreview();
+  });
+}
+
 // Отрисовка таблицы
 function renderTable() {
   tbody.innerHTML = "";
@@ -638,3 +648,4 @@ document.getElementById("shortcutsLink").onclick = (event) => {
 };
 
 loadSettings();
+initPreviewAutoUpdate();
