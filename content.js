@@ -1,6 +1,4 @@
-﻿console.log("Morphogrammer: content script загружен");
-
-let transformMap = {};
+﻿let transformMap = {};
 let lastEditable = null;
 let lastRange = null;
 
@@ -117,7 +115,7 @@ function isTextInput(element) {
     return false;
   }
   const type = (element.type || "text").toLowerCase();
-  return ["text", "search", "url", "tel", "email", "password"].includes(type);
+  return ["text", "search"].includes(type);
 }
 
 function isEditableElement(element) {
