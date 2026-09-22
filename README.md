@@ -145,3 +145,8 @@
 ## Лицензия
 
 MIT
+
+## Конфиденциальность
+
+Политика конфиденциальности:  
+https://tzaralexrex.github.io/Morphogrammer-Extension/privacy-policy.html
