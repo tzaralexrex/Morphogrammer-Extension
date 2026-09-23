@@ -40,7 +40,7 @@
 
 #### Mozilla Firefox
 
-Найдите дополнение по имени **Morphohrammer** в магазине дополнений (https://addons.mozilla.org/ru/firefox/addon/morphogrammer/) и установите оттуда.
+Найдите дополнение по имени **Morphogrammer** в магазине дополнений (https://addons.mozilla.org/ru/firefox/addon/morphogrammer/) и установите оттуда.
 
 Либо установите как временное дополнение из исходного кода:
 
