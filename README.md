@@ -40,6 +40,10 @@
 
 #### Mozilla Firefox
 
+Найдите дополнение по имени **Morphohrammer** в магазине дополнений (https://addons.mozilla.org/ru/firefox/addon/morphogrammer/) и установите оттуда.
+
+Либо установите как временное дополнение из исходного кода:
+
 1. Откройте Firefox и перейдите на `about:debugging`
 2. В левой панели выберите **Этот Firefox** (This Firefox)
 3. Нажмите **Загрузить временное дополнение…** (Load Temporary Add-On)
