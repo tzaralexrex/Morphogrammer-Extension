@@ -18,7 +18,7 @@
 
 ## Установка
 
-### 1. Скачайте расширение
+### 1. Скачайте расширение (для установки вручную)
 
 - Клонируйте репозиторий:
   ```bash
@@ -29,6 +29,8 @@
 ### 2. Загрузите в браузер
 
 #### Google Chrome и браузеры на Chromium (Edge, Brave, Opera и др.)
+
+Найдите дополнение по имени **Morphogrammer** в магазине дополнений (https://chromewebstore.google.com/detail/dhkfacfpkjglpkmdkedfpdpnnmcljnfl) и установите оттуда.
 
 1. Откройте `chrome://extensions/` (или `edge://extensions/`, `brave://extensions/` и т.д.)
 2. Включите **Режим разработчика** (переключатель в правом верхнем углу)
